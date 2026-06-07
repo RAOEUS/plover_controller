@@ -560,17 +560,22 @@ class ControllerMachine(StenotypeBase):
     """
 
     _state: ControllerState
+    _output_enabled: bool
 
     def __init__(self, params: dict[str, Any]):
         super().__init__()
+        self._output_enabled = False
         self._state = ControllerState(params, self._wrap_notify)
+
+    def set_suppression(self, enabled):
+        self._output_enabled = enabled
 
     def _wrap_notify(self, keys: list[str]):
         from plover_controller.option_ui import is_steno_suppressed
 
         if is_steno_suppressed():
             return
-        if self._state._params.get("rumble_on_stroke", True):
+        if self._output_enabled and self._state._params.get("rumble_on_stroke", True):
             p = self._state._params
             low = int(p.get("rumble_low_freq", 0.5) * 0xFFFF)
             high = int(p.get("rumble_high_freq", 0.25) * 0xFFFF)
