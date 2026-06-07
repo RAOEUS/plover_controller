@@ -606,6 +606,7 @@ class ControllerMachine(StenotypeBase):
     @classmethod
     def get_option_info(cls) -> dict[str, tuple[Any, Callable[[str], Any]]]:
         return {
+            "profile": ("", str),
             "mapping": (DEFAULT_MAPPING, str),
             "timeout": (1.0, float),
             "stick_dead_zone": (0.6, float),

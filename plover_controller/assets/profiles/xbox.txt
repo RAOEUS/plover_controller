@@ -30,10 +30,21 @@ lefttrigger -> A-
 leftshoulder -> O-
 rightshoulder -> -E
 righttrigger -> -U
-dpadl -> A-
-dpadd -> O-
-dpadu -> -E
-dpadr -> -U
+dpadu,dpadd,dpadl,dpadr ->
+dpadu,dpadd,dpadl ->
+dpadu,dpadd,dpadr ->
+dpadu,dpadl,dpadr ->
+dpadd,dpadl,dpadr ->
+dpadu,dpadd ->
+dpadu,dpadr ->
+dpadd,dpadr -> -LTZ
+dpadl,dpadr ->
+dpadu,dpadl -> KPA*-D
+dpadd,dpadl -> HRO*-ERD
+dpadu -> KPA-
+dpadd -> HRO*-ER
+dpadl -> SKWH-
+dpadr -> SKP-
 leftdr -> R-
 leftd -> W-
 leftdl -> K-

@@ -233,9 +233,9 @@ class TestControllerMachine(unittest.TestCase):
     def test_get_option_info_has_required_keys(self):
         info = ControllerMachine.get_option_info()
         required = [
-            "mapping", "timeout", "stick_dead_zone", "trigger_dead_zone",
-            "stroke_end_threshold", "use_hidapi", "use_rawinput",
-            "correlate_rawinput", "use_joystick_thread",
+            "profile", "mapping", "timeout", "stick_dead_zone",
+            "trigger_dead_zone", "stroke_end_threshold", "use_hidapi",
+            "use_rawinput", "correlate_rawinput", "use_joystick_thread",
             "rumble_on_stroke", "rumble_duration", "rumble_low_freq",
             "rumble_high_freq", "display_chroma_color", "display_layout",
             "display_show_back",
@@ -348,6 +348,24 @@ class TestDefaultMappingLoads(unittest.TestCase):
         self.assertTrue(len(m.sticks) > 0)
         self.assertTrue(len(m.buttons) > 0)
         self.assertTrue(len(m.unordered_mappings) > 0)
+
+
+class TestProfileOption(unittest.TestCase):
+    def test_profile_option_in_option_info(self):
+        info = ControllerMachine.get_option_info()
+        self.assertIn("profile", info)
+        default, parser = info["profile"]
+        self.assertEqual(default, "")
+        self.assertEqual(parser, str)
+
+    def test_machine_uses_mapping_text_not_profile(self):
+        params = make_params(profile="PlayStation (Built-in)")
+        machine = ControllerMachine(params)
+        default_parsed = Mappings.parse(DEFAULT_MAPPING)
+        self.assertEqual(
+            list(machine._state._mappings.sticks.keys()),
+            list(default_parsed.sticks.keys()),
+        )
 
 
 if __name__ == "__main__":

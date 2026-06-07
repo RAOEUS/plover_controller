@@ -1,6 +1,9 @@
 left stick has segments (dr,d,dl,ul,u,ur) on axes 0 and 1 offset by 0 degrees
 right stick has segments (dr,d,dl,ul,u,ur) on axes 2 and 3 offset by 0 degrees
 
+trigger on axis 4 is lefttrigger
+trigger on axis 5 is righttrigger
+
 hat 0 is dpad
 
 button 0 is a
@@ -24,10 +27,23 @@ ls -> S-
 rs -> *
 lb -> O-
 rb -> -E
-dpadl -> A-
-dpadd -> O-
-dpadu -> -E
-dpadr -> -U
+lefttrigger -> A-
+righttrigger -> -U
+dpadu,dpadd,dpadl,dpadr ->
+dpadu,dpadd,dpadl ->
+dpadu,dpadd,dpadr ->
+dpadu,dpadl,dpadr ->
+dpadd,dpadl,dpadr ->
+dpadu,dpadd ->
+dpadu,dpadr ->
+dpadd,dpadr -> -LTZ
+dpadl,dpadr ->
+dpadu,dpadl -> KPA*-D
+dpadd,dpadl -> HRO*-ERD
+dpadu -> KPA-
+dpadd -> HRO*-ER
+dpadl -> SKWH-
+dpadr -> SKP-
 leftdr -> R-
 leftd -> W-
 leftdl -> K-

@@ -845,6 +845,18 @@ class ProfilesTab(QWidget):
         self._get_mapping_text = None
         self.refresh_list()
 
+    def current_name(self):
+        return self._current_name
+
+    def set_current(self, name):
+        self._current_name = name or None
+        for i in range(self._list.count()):
+            item = self._list.item(i)
+            if item.text() == name:
+                self._list.setCurrentItem(item)
+                return
+        self._list.clearSelection()
+
     def set_mapping_getter(self, fn):
         self._get_mapping_text = fn
 
@@ -1016,6 +1028,7 @@ class ControllerOption(QGroupBox):
 
     def _on_profile_loaded(self, text):
         self._updating = True
+        self._value["profile"] = self._profiles_tab.current_name() or ""
         self._mappings = Mappings.parse(text)
         self._value["mapping"] = text
         self._hardware_tab.populate(self._mappings)
@@ -1040,10 +1053,12 @@ class ControllerOption(QGroupBox):
 
     def _reset_to_default(self):
         self._updating = True
+        self._value["profile"] = ""
         self._mappings = Mappings.parse(DEFAULT_MAPPING)
         self._value["mapping"] = DEFAULT_MAPPING
         self._hardware_tab.populate(self._mappings)
         self._steno_tab.populate(self._mappings)
+        self._profiles_tab.set_current("")
         self._updating = False
         self._rebuild_and_emit()
 
@@ -1056,4 +1071,5 @@ class ControllerOption(QGroupBox):
         self._hardware_tab.set_stick_dead_zone(value.get("stick_dead_zone", 0.6))
         self._steno_tab.populate(self._mappings)
         self._settings_tab.populate(value)
+        self._profiles_tab.set_current(value.get("profile", ""))
         self._updating = False
