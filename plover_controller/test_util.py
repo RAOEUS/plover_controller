@@ -1,5 +1,5 @@
 import unittest
-from util import get_keys_for_stroke
+from plover_controller.util import get_keys_for_stroke
 
 
 class TestUtil(unittest.TestCase):
