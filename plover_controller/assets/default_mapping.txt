@@ -4,6 +4,8 @@ right stick has segments (dr,d,dl,ul,u,ur) on axes 3 and 4 offset by 0 degrees
 trigger on axis 2 is lefttrigger
 trigger on axis 5 is righttrigger
 
+hat 0 is dpad
+
 button 0 is a
 button 1 is b
 button 2 is x
@@ -25,7 +27,7 @@ b -> -Z
 x -> -T
 y -> -D
 back -> *
-// guide ->
+// guide -> (often intercepted by Steam or the OS)
 start -> #
 leftstick -> S-
 rightstick -> *
@@ -33,11 +35,21 @@ lefttrigger -> A-
 leftshoulder -> O-
 rightshoulder -> -E
 righttrigger -> -U
-// dpup ->
-// dpdown ->
-// dpleft ->
-// dpright ->
-// misc1 ->
+dpadu,dpadd,dpadl,dpadr ->
+dpadu,dpadd,dpadl ->
+dpadu,dpadd,dpadr ->
+dpadu,dpadl,dpadr ->
+dpadd,dpadl,dpadr ->
+dpadu,dpadd ->
+dpadu,dpadr ->
+dpadd,dpadr -> -LTZ
+dpadl,dpadr ->
+dpadu,dpadl -> KPA*-D
+dpadd,dpadl -> HRO*-ERD
+dpadu -> KPA-
+dpadd -> HRO*-ER
+dpadl -> SKWH-
+dpadr -> SKP-
 paddle1 -> -E
 paddle2 -> -U
 paddle3 -> O-
