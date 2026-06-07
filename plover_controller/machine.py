@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from dataclasses import dataclass
 import itertools
+import json
 from math import cos, sin, sqrt, tau
 import sdl2
 import threading
@@ -623,6 +624,10 @@ class ControllerMachine(StenotypeBase):
             "display_chroma_color": ("#00b140", str),
             "display_layout": ("horizontal", str),
             "display_show_back": (True, boolean),
+            "display_obs_server": (False, boolean),
+            "display_obs_port": (35016, int),
+            "display_api_server": (False, boolean),
+            "display_api_port": (35017, int),
         }
 
 
@@ -702,6 +707,9 @@ class ControllerDisplayTool(Tool):
     def __init__(self, engine: StenoEngine):
         super().__init__(engine)
         self._dying = False
+        self._obs_server = None
+        self._api_server = None
+        self._last_state_json = None
 
         from plover_controller.display import ControllerView
 
@@ -718,6 +726,8 @@ class ControllerDisplayTool(Tool):
 
         def handle_destroy():
             get_controller_thread().remove_listener(self._handle_event)
+            self._stop_obs_server()
+            self._stop_api_server()
 
         self.destroyed.connect(handle_destroy)
         self.resize(800, 400)
@@ -733,9 +743,64 @@ class ControllerDisplayTool(Tool):
         self._view.set_chroma_color(params.get("display_chroma_color", "#00b140"))
         self._view.set_layout_mode(params.get("display_layout", "horizontal"))
         self._view.set_show_back(params.get("display_show_back", True))
+        self._sync_obs_server(params)
+        self._sync_api_server(params)
+        self._push_state()
+
+    def _sync_obs_server(self, params):
+        enabled = params.get("display_obs_server", False)
+        port = params.get("display_obs_port", 35016)
+        if enabled:
+            if self._obs_server is None:
+                from plover_controller.obs_server import OBSStateServer
+                try:
+                    self._obs_server = OBSStateServer(port)
+                    self._obs_server.start()
+                except OSError:
+                    self._obs_server = None
+        else:
+            self._stop_obs_server()
+
+    def _sync_api_server(self, params):
+        enabled = params.get("display_api_server", False)
+        port = params.get("display_api_port", 35017)
+        if enabled:
+            if self._api_server is None:
+                from plover_controller.obs_server import APIStateServer
+                try:
+                    self._api_server = APIStateServer(port)
+                    self._api_server.start()
+                except OSError:
+                    self._api_server = None
+        else:
+            self._stop_api_server()
+
+    def _stop_obs_server(self):
+        if self._obs_server is not None:
+            self._obs_server.stop()
+            self._obs_server = None
+
+    def _stop_api_server(self):
+        if self._api_server is not None:
+            self._api_server.stop()
+            self._api_server = None
+
+    def _push_state(self):
+        if self._obs_server is None and self._api_server is None:
+            return
+        state = self._view.get_state()
+        state_json = json.dumps(state, sort_keys=True, separators=(',', ':'))
+        if state_json == self._last_state_json:
+            return
+        self._last_state_json = state_json
+        if self._obs_server is not None:
+            self._obs_server.update_state(state)
+        if self._api_server is not None:
+            self._api_server.update_state(state)
 
     def _handle_event(self, event: Event):
         self.events.emit(event)
 
     def _handle_event_signal(self, event: Event):
         self._view.handle_event(event)
+        self._push_state()

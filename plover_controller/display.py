@@ -224,6 +224,37 @@ class ControllerView(QWidget):
                     self._pressed.discard(name)
             self.update()
 
+    def get_state(self):
+        sticks = {}
+        triggers = {}
+        if self._mappings:
+            for stick in self._mappings.sticks.values():
+                sticks[stick.name] = {
+                    'xAxis': stick.x_axis,
+                    'yAxis': stick.y_axis,
+                    'offset': stick.offset,
+                    'segments': list(stick.segments),
+                }
+            for trigger in self._mappings.triggers.values():
+                triggers[trigger.actual] = trigger.renamed
+        def _q(v):
+            r = round(v, 1)
+            return 0.0 if -0.05 < r < 0.05 else r
+
+        return {
+            'pressed': sorted(self._pressed),
+            'stickAxes': {k: _q(v) for k, v in self._stick_axes.items()},
+            'triggerValues': {k: _q(v) for k, v in self._trigger_values.items()},
+            'activeSegments': dict(self._active_segments),
+            'chromaColor': self._chroma_color.name(),
+            'layoutMode': self._layout_mode,
+            'showBack': self._show_back,
+            'stenoLabels': dict(self._steno_labels),
+            'stickDeadZone': self._stick_dead_zone,
+            'sticks': sticks,
+            'triggers': triggers,
+        }
+
     def paintEvent(self, _event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

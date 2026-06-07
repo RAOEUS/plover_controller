@@ -35,6 +35,7 @@ from plover_controller.qt_compat import (
     QMessageBox,
     QPushButton,
     QSizePolicy,
+    QSpinBox,
     QTabWidget,
     QTableWidget,
     QTableWidgetItem,
@@ -718,6 +719,65 @@ class SettingsTab(QWidget):
         self._show_back_cb.toggled.connect(self._on_changed)
         display_form.addRow(self._show_back_cb)
 
+        obs_group = QGroupBox("OBS Browser Source")
+        obs_layout = QVBoxLayout(obs_group)
+        obs_hint = QLabel(
+            "Serves a page you can add as a Browser source in OBS.\n"
+            "The Controller Display window must be open for the server to run.\n"
+            "In OBS: Sources → Add → Browser → URL: http://localhost:<port>"
+        )
+        obs_hint.setWordWrap(True)
+        obs_hint.setStyleSheet("color: #888; font-style: italic;")
+        obs_layout.addWidget(obs_hint)
+
+        self._obs_server_cb = QCheckBox("Enable OBS server")
+        self._obs_server_cb.setChecked(False)
+        self._obs_server_cb.toggled.connect(self._on_obs_toggled)
+        obs_layout.addWidget(self._obs_server_cb)
+
+        obs_port_row = QHBoxLayout()
+        self._obs_port_label = QLabel("Port:")
+        self._obs_port_spin = QSpinBox()
+        self._obs_port_spin.setRange(1024, 65535)
+        self._obs_port_spin.setValue(35016)
+        self._obs_port_spin.valueChanged.connect(self._on_changed)
+        obs_port_row.addWidget(self._obs_port_label)
+        obs_port_row.addWidget(self._obs_port_spin)
+        obs_port_row.addStretch()
+        obs_layout.addLayout(obs_port_row)
+
+        layout.addWidget(obs_group)
+
+        api_group = QGroupBox("State API (for custom displays)")
+        api_layout = QVBoxLayout(api_group)
+        api_hint = QLabel(
+            "Exposes controller state via SSE for custom displays and tools.\n"
+            "The Controller Display window must be open for the server to run.\n"
+            "GET /events — Server-Sent Events stream (real-time updates)\n"
+            "GET /state — single JSON snapshot of current state"
+        )
+        api_hint.setWordWrap(True)
+        api_hint.setStyleSheet("color: #888; font-style: italic;")
+        api_layout.addWidget(api_hint)
+
+        self._api_server_cb = QCheckBox("Enable state API server")
+        self._api_server_cb.setChecked(False)
+        self._api_server_cb.toggled.connect(self._on_api_toggled)
+        api_layout.addWidget(self._api_server_cb)
+
+        api_port_row = QHBoxLayout()
+        self._api_port_label = QLabel("Port:")
+        self._api_port_spin = QSpinBox()
+        self._api_port_spin.setRange(1024, 65535)
+        self._api_port_spin.setValue(35017)
+        self._api_port_spin.valueChanged.connect(self._on_changed)
+        api_port_row.addWidget(self._api_port_label)
+        api_port_row.addWidget(self._api_port_spin)
+        api_port_row.addStretch()
+        api_layout.addLayout(api_port_row)
+
+        layout.addWidget(api_group)
+
         layout.addWidget(display_group)
 
         driver_group = QGroupBox("Advanced: Driver Settings")
@@ -746,6 +806,16 @@ class SettingsTab(QWidget):
     def _on_changed(self, _=None):
         if not self._updating:
             self.changed.emit()
+
+    def _on_obs_toggled(self, checked):
+        self._obs_port_spin.setEnabled(checked)
+        self._obs_port_label.setEnabled(checked)
+        self._on_changed()
+
+    def _on_api_toggled(self, checked):
+        self._api_port_spin.setEnabled(checked)
+        self._api_port_label.setEnabled(checked)
+        self._on_changed()
 
     def _on_rumble_toggled(self, checked):
         self._rumble_duration.setEnabled(checked)
@@ -791,6 +861,16 @@ class SettingsTab(QWidget):
                 self._layout_combo.setCurrentIndex(idx)
         if "display_show_back" in value:
             self._show_back_cb.setChecked(bool(value["display_show_back"]))
+        if "display_obs_server" in value:
+            self._obs_server_cb.setChecked(bool(value["display_obs_server"]))
+        if "display_obs_port" in value:
+            self._obs_port_spin.setValue(int(value["display_obs_port"]))
+        self._on_obs_toggled(self._obs_server_cb.isChecked())
+        if "display_api_server" in value:
+            self._api_server_cb.setChecked(bool(value["display_api_server"]))
+        if "display_api_port" in value:
+            self._api_port_spin.setValue(int(value["display_api_port"]))
+        self._on_api_toggled(self._api_server_cb.isChecked())
         self._updating = False
 
     def read_settings(self):
@@ -806,6 +886,10 @@ class SettingsTab(QWidget):
         result["display_chroma_color"] = self._chroma_color
         result["display_layout"] = self._layout_combo.currentData()
         result["display_show_back"] = self._show_back_cb.isChecked()
+        result["display_obs_server"] = self._obs_server_cb.isChecked()
+        result["display_obs_port"] = self._obs_port_spin.value()
+        result["display_api_server"] = self._api_server_cb.isChecked()
+        result["display_api_port"] = self._api_port_spin.value()
         return result
 
 

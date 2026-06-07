@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Plover Controller API Example</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #1a1a1e; color: #e0e0e0; padding: 20px; }
+  h1 { font-size: 1.4em; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.85em; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 900px; }
+  .card { background: #28282c; border-radius: 8px; padding: 16px; }
+  .card h2 { font-size: 1em; color: #aaa; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+
+  /* Connection status */
+  .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .status.connected { background: #4caf50; }
+  .status.disconnected { background: #f44336; }
+
+  /* Buttons */
+  .buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+  .btn { padding: 4px 10px; border-radius: 4px; background: #3a3a40; font-size: 0.8em; transition: all 0.05s; }
+  .btn.active { background: #fff; color: #1a1a1e; font-weight: bold; }
+
+  /* Sticks */
+  .stick-container { display: flex; gap: 20px; justify-content: center; }
+  .stick-box { text-align: center; }
+  .stick-box canvas { background: #1a1a1e; border-radius: 50%; }
+  .stick-label { font-size: 0.75em; color: #888; margin-top: 4px; }
+
+  /* Triggers */
+  .trigger-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .trigger-name { width: 80px; font-size: 0.85em; }
+  .trigger-bar-bg { flex: 1; height: 14px; background: #3a3a40; border-radius: 4px; overflow: hidden; }
+  .trigger-bar { height: 100%; background: #7c7cf0; border-radius: 4px; transition: width 0.05s; }
+  .trigger-val { width: 40px; font-size: 0.75em; text-align: right; color: #888; }
+
+  /* Steno */
+  .steno-active { font-size: 0.85em; color: #7c7cf0; min-height: 1.2em; }
+
+  /* Log */
+  .log { font-family: monospace; font-size: 0.75em; color: #888; max-height: 200px; overflow-y: auto; }
+  .log div { padding: 1px 0; border-bottom: 1px solid #222; }
+  .log .field { color: #aaa; }
+
+  /* Config */
+  label { font-size: 0.85em; }
+  input[type="number"] { width: 80px; background: #3a3a40; border: 1px solid #555; color: #e0e0e0;
+    border-radius: 4px; padding: 4px 6px; font-size: 0.85em; }
+  button { background: #3a3a40; color: #e0e0e0; border: 1px solid #555; border-radius: 4px;
+    padding: 6px 14px; cursor: pointer; font-size: 0.85em; }
+  button:hover { background: #4a4a50; }
+  .config-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Plover Controller - API Example</h1>
+<p class="subtitle">
+  Connects to the State API server via Server-Sent Events (SSE).<br>
+  Enable "State API server" in Plover's Controller settings, then open the Controller Display window.
+</p>
+
+<div class="config-row">
+  <label>Port:</label>
+  <input type="number" id="port" value="35017" min="1024" max="65535">
+  <button onclick="connect()">Connect</button>
+  <span><span class="status disconnected" id="statusDot"></span><span id="statusText">Disconnected</span></span>
+</div>
+
+<div class="grid">
+
+  <!-- Buttons -->
+  <div class="card">
+    <h2>Buttons</h2>
+    <div class="buttons" id="buttons"></div>
+  </div>
+
+  <!-- Steno -->
+  <div class="card">
+    <h2>Active Steno Segment</h2>
+    <div id="steno"></div>
+  </div>
+
+  <!-- Sticks -->
+  <div class="card">
+    <h2>Sticks</h2>
+    <div class="stick-container" id="sticks"></div>
+  </div>
+
+  <!-- Triggers -->
+  <div class="card">
+    <h2>Triggers</h2>
+    <div id="triggers"></div>
+  </div>
+
+  <!-- Event log -->
+  <div class="card" style="grid-column: 1 / -1;">
+    <h2>Event Log (last 50)</h2>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────
+let evtSource = null;
+let state = {};
+const ALL_BUTTONS = [
+  'a','b','x','y',
+  'dpadu','dpadd','dpadl','dpadr',
+  'leftshoulder','rightshoulder',
+  'lefttrigger','righttrigger',
+  'leftstick','rightstick',
+  'back','start','guide','misc1',
+  'touchpad',
+  'paddle1','paddle2','paddle3','paddle4',
+];
+
+// ─── Connection ─────────────────────────────────────────────────────────
+//
+// The API server uses Server-Sent Events (SSE), not WebSockets.
+// SSE is one-directional (server → client) and uses a simple HTTP
+// connection that stays open.  The browser reconnects automatically
+// if the connection drops.
+//
+//   GET http://localhost:<port>/events   → SSE stream (real-time)
+//   GET http://localhost:<port>/state    → single JSON snapshot
+//
+// Each SSE message is a JSON object with the full controller state.
+
+function connect() {
+  if (evtSource) {
+    evtSource.close();
+  }
+
+  const port = document.getElementById('port').value;
+  const url = `http://localhost:${port}/events`;
+
+  evtSource = new EventSource(url);
+
+  evtSource.onopen = () => {
+    document.getElementById('statusDot').className = 'status connected';
+    document.getElementById('statusText').textContent = 'Connected';
+    addLog('Connected to ' + url);
+  };
+
+  evtSource.onerror = () => {
+    document.getElementById('statusDot').className = 'status disconnected';
+    document.getElementById('statusText').textContent = 'Disconnected (retrying...)';
+  };
+
+  // Every message is the full state object
+  evtSource.onmessage = (event) => {
+    const prev = state;
+    state = JSON.parse(event.data);
+    logChanges(prev, state);
+    render();
+  };
+}
+
+// ─── Rendering ──────────────────────────────────────────────────────────
+function render() {
+  renderButtons();
+  renderSticks();
+  renderTriggers();
+  renderSteno();
+}
+
+function renderButtons() {
+  const pressed = new Set(state.pressed || []);
+  const el = document.getElementById('buttons');
+  // Build once, then update classes
+  if (!el.children.length) {
+    el.innerHTML = ALL_BUTTONS
+      .map(b => `<div class="btn" data-btn="${b}">${b}</div>`)
+      .join('');
+  }
+  for (const child of el.children) {
+    const name = child.dataset.btn;
+    child.className = pressed.has(name) ? 'btn active' : 'btn';
+  }
+}
+
+function renderSticks() {
+  const container = document.getElementById('sticks');
+  const sticks = state.sticks || {};
+  const axes = state.stickAxes || {};
+  const segments = state.activeSegments || {};
+
+  for (const [name, stick] of Object.entries(sticks)) {
+    let box = document.querySelector(`.stick-box[data-stick="${name}"]`);
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'stick-box';
+      box.dataset.stick = name;
+      box.innerHTML = `<canvas width="100" height="100"></canvas><div class="stick-label">${name}</div>`;
+      container.appendChild(box);
+    }
+    const canvas = box.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const cx = 50, cy = 50, r = 40;
+
+    ctx.clearRect(0, 0, 100, 100);
+
+    // Dead zone ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#3a3a40';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Active segment highlight
+    const activeSeg = segments[name];
+    if (activeSeg && stick.segments) {
+      const n = stick.segments.length;
+      const idx = stick.segments.indexOf(activeSeg);
+      if (idx >= 0) {
+        const span = (Math.PI * 2) / n;
+        const startAngle = (stick.offset * Math.PI / 180) + idx * span;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r - 2, startAngle, startAngle + span);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(124, 124, 240, 0.3)';
+        ctx.fill();
+      }
+    }
+
+    // Segment labels
+    if (stick.segments) {
+      const n = stick.segments.length;
+      const span = (Math.PI * 2) / n;
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i < n; i++) {
+        const mid = (stick.offset * Math.PI / 180) + (i + 0.5) * span;
+        const lr = r * 0.65;
+        const label = (state.stenoLabels || {})[name + stick.segments[i]] || stick.segments[i];
+        ctx.fillStyle = stick.segments[i] === activeSeg ? '#fff' : '#666';
+        ctx.fillText(label, cx + lr * Math.cos(mid), cy + lr * Math.sin(mid));
+      }
+    }
+
+    // Stick position dot
+    const sx = axes[stick.xAxis] || 0;
+    const sy = axes[stick.yAxis] || 0;
+    const dotR = 6;
+    ctx.beginPath();
+    ctx.arc(cx + sx * (r - dotR), cy + sy * (r - dotR), dotR, 0, Math.PI * 2);
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fill();
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function renderTriggers() {
+  const container = document.getElementById('triggers');
+  const triggers = state.triggers || {};
+  const values = state.triggerValues || {};
+
+  const items = [];
+  for (const [axis, name] of Object.entries(triggers)) {
+    const raw = values[name] ?? 0;
+    items.push({ name, value: Math.max(0, Math.min(1, raw)) });
+  }
+  if (!items.length) {
+    container.innerHTML = '<span style="color:#555;font-size:0.85em">No triggers configured</span>';
+    return;
+  }
+
+  container.innerHTML = items.map(t => {
+    const pct = (t.value * 100).toFixed(0);
+    return `
+    <div class="trigger-row">
+      <span class="trigger-name">${t.name}</span>
+      <div class="trigger-bar-bg"><div class="trigger-bar" style="width:${pct}%"></div></div>
+      <span class="trigger-val">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSteno() {
+  const el = document.getElementById('steno');
+  const segments = state.activeSegments || {};
+  const labels = state.stenoLabels || {};
+  const triggers = state.triggers || {};
+  const trigValues = state.triggerValues || {};
+
+  const active = [];
+  for (const [stick, dir] of Object.entries(segments)) {
+    const key = stick + dir;
+    const steno = labels[key];
+    active.push(steno ? `${key} → ${steno}` : key);
+  }
+
+  const pressed = new Set(state.pressed || []);
+  for (const btn of pressed) {
+    const steno = labels[btn];
+    if (steno) active.push(`${btn} → ${steno}`);
+  }
+
+  for (const [axis, name] of Object.entries(triggers)) {
+    const val = trigValues[name] ?? 0;
+    if (val > 0.05) {
+      const steno = labels[name];
+      if (steno) active.push(`${name} → ${steno}`);
+    }
+  }
+
+  el.innerHTML = active.length
+    ? active.map(a => `<div class="steno-active">${a}</div>`).join('')
+    : '<span style="color:#555;font-size:0.85em">No active steno inputs</span>';
+}
+
+// ─── Change log ─────────────────────────────────────────────────────────
+function logChanges(prev, next) {
+  const changes = [];
+
+  // Button changes
+  const oldP = new Set(prev.pressed || []);
+  const newP = new Set(next.pressed || []);
+  for (const b of newP) if (!oldP.has(b)) changes.push(`<span class="field">${b}</span> pressed`);
+  for (const b of oldP) if (!newP.has(b)) changes.push(`<span class="field">${b}</span> released`);
+
+  // Axis changes
+  const oldA = prev.stickAxes || {};
+  const newA = next.stickAxes || {};
+  for (const [k, v] of Object.entries(newA)) {
+    if (oldA[k] !== v) changes.push(`<span class="field">${k}</span> = ${v.toFixed(2)}`);
+  }
+
+  // Trigger changes
+  const oldT = prev.triggerValues || {};
+  const newT = next.triggerValues || {};
+  for (const [k, v] of Object.entries(newT)) {
+    if (oldT[k] !== v) changes.push(`<span class="field">${k}</span> = ${(v * 100).toFixed(0)}%`);
+  }
+
+  // Segment changes
+  const oldS = prev.activeSegments || {};
+  const newS = next.activeSegments || {};
+  for (const [k, v] of Object.entries(newS)) {
+    if (oldS[k] !== v) changes.push(`<span class="field">${k}</span> segment → ${v}`);
+  }
+  for (const k of Object.keys(oldS)) {
+    if (!(k in newS)) changes.push(`<span class="field">${k}</span> segment → center`);
+  }
+
+  if (changes.length) addLog(changes.join(' &nbsp;│&nbsp; '));
+}
+
+function addLog(html) {
+  const log = document.getElementById('log');
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  log.prepend(div);
+  while (log.children.length > 50) log.lastChild.remove();
+}
+
+// ─── Auto-connect on load ───────────────────────────────────────────────
+connect();
+</script>
+
+</body>
+</html>
