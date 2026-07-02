@@ -553,11 +553,18 @@ class ControllerState:
 
 class ControllerMachine(StenotypeBase):
     KEYMAP_MACHINE_TYPE = "TX Bolt"
+    # Superset of every key any supported system can use. Plover builds the
+    # keymap per (machine, system) pair, so keys the active system doesn't
+    # define are simply unbound -- standard WSI users fall back to the TX Bolt
+    # keymap and are unaffected, while the Mussel Power system binds the extra
+    # rows below. See plover_controller/systems/mussel_power.py.
     KEYS_LAYOUT = """
         #  #  #  #  #  #  #  #  #  #
         S- T- P- H- * -F -P -L -T -D
         S- K- W- R- * -R -B -G -S -Z
                A- O- -E -U
+        1- 2- 3- 4- 5- 6- 7- 8- l- r- L- R-
+        -1 -2 -3 -4 -5 -6 -7 -8 -l -r -L -R
     """
 
     _state: ControllerState

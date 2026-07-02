@@ -12,6 +12,7 @@ BUILTIN_PROFILES = {
     "Xbox (Built-in)": "asset:plover_controller:assets/profiles/xbox.txt",
     "PlayStation (Built-in)": "asset:plover_controller:assets/profiles/playstation.txt",
     "Generic (Built-in)": "asset:plover_controller:assets/profiles/generic.txt",
+    "Mussel Power (Built-in)": "asset:plover_controller:assets/profiles/mussel.txt",
 }
 
 

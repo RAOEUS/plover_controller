@@ -92,6 +92,23 @@ Any problems will most likely be due to your button map. The best way to resolve
 - Move the joystick or press the button causing problems
 - Observe the text output in the **Last axis event** and **Last other event** fields at the bottom of the **Options** section, and compare it to the text in the **Mapping** field. Make changes as needed.
 
+## Alternate layouts: Mussel Power
+
+The controller isn't limited to the standard 23-key Ward Stone Ireland (WSI)
+layout. The plugin bundles a **Mussel Power** system — a 28-key layout with
+eight numbered keys and small/large rotation keys per hand.
+
+To use it:
+
+1. In Plover, open **Configure → System** and select **Mussel Power**.
+2. In the **Machine** tab, load the **Mussel Power (Built-in)** profile.
+
+The standard WSI profiles won't work under Mussel Power (and vice versa) because
+the two use entirely different keys. The built-in profile is a starting point —
+rebind the rotation/vowel keys to taste. Adding another layout is the same
+recipe: register a `plover.system` module (see
+`plover_controller/systems/mussel_power.py`) and ship a matching profile.
+
 ## Default mapping
 
 ### Left joystick

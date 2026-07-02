@@ -26,8 +26,11 @@ def keys_to_stroke(keys: tuple[str, ...]) -> str:
     if not keys:
         return ""
 
-    LEFT_ORDER = "STKPWHRAO"
-    RIGHT_ORDER = "EUFRPBLGTSDZ"
+    # Mussel Power's unique keys (digits, lowercase l/r, left L) are placed so
+    # that English strokes -- which contain none of them -- serialize exactly as
+    # before; only the relative order among same-system keys is used.
+    LEFT_ORDER = "12345678lrLSTKPWHRAO"
+    RIGHT_ORDER = "EU12345678lrFRPBLGTSDZ"
 
     left = []
     right = []

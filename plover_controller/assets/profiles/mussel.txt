@@ -1,0 +1,69 @@
+// Mussel Power (28-key) starter profile.
+//
+// Requires the "Mussel Power" system to be selected in Plover
+// (Configure -> System). None of the standard WSI profiles work with it.
+//
+// Each stick is read as 8 compass directions (the Mussel "8 directions"):
+//     1 2 3        ul  u  ur
+//     4   5   =    l       r
+//     6 7 8        dl  d  dr
+// Left stick -> 1- .. 8-, right stick -> -1 .. -8.
+// Rotation keys (l/r small, L/R large) and the vowels are on the buttons and
+// triggers -- rebind these to taste; this is a starting point, not gospel.
+
+left stick has segments (dr,d,dl,l,ul,u,ur,r) on axes 0 and 1 offset by 22.5 degrees
+right stick has segments (dr,d,dl,l,ul,u,ur,r) on axes 2 and 3 offset by 22.5 degrees
+
+trigger on axis 4 is lefttrigger
+trigger on axis 5 is righttrigger
+
+hat 0 is dpad
+
+button 0 is a
+button 1 is b
+button 2 is x
+button 3 is y
+button 4 is lb
+button 5 is rb
+button 6 is back
+button 7 is start
+button 8 is ls
+button 9 is rs
+
+// Left hand directions -> 1- .. 8-
+leftul -> 1-
+leftu -> 2-
+leftur -> 3-
+leftl -> 4-
+leftr -> 5-
+leftdl -> 6-
+leftd -> 7-
+leftdr -> 8-
+
+// Right hand directions -> -1 .. -8
+rightul -> -1
+rightu -> -2
+rightur -> -3
+rightl -> -4
+rightr -> -5
+rightdl -> -6
+rightd -> -7
+rightdr -> -8
+
+// Left-hand rotation keys
+x -> l-
+y -> r-
+lb -> L-
+lefttrigger -> R-
+
+// Right-hand rotation keys
+a -> -l
+b -> -r
+rb -> -L
+righttrigger -> -R
+
+// Vowels
+ls -> A-
+back -> O-
+start -> -E
+rs -> -U

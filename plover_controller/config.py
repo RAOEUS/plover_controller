@@ -62,14 +62,14 @@ class Mappings:
                     segments=match[2].split(","),
                 )
                 result.sticks[stick.name] = stick
-            elif match := re.match(r"([a-z0-9,]+) -> ([A-Z-*#]+)", line):
+            elif match := re.match(r"([a-z0-9,]+) -> ([A-Za-z0-9*#-]+)", line):
                 lhs = match[1].split(",")
                 rhs = get_keys_for_stroke(match[2])
                 result.unordered_mappings.append((lhs, rhs))
             elif match := re.match(r"([a-z0-9,]+) ->\s*$", line):
                 lhs = match[1].split(",")
                 result.unordered_mappings.append((lhs, ()))
-            elif match := re.match(r"(\w+)\(([a-z,]+)\) -> ([A-Z-*#]+)", line):
+            elif match := re.match(r"(\w+)\(([a-z,]+)\) -> ([A-Za-z0-9*#-]+)", line):
                 result.ordered_mappings[
                     tuple(f"{match[1]}{pos}" for pos in match[2].split(","))
                 ] = get_keys_for_stroke(match[3])
