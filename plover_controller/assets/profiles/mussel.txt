@@ -37,7 +37,7 @@ lb -> O-
 rb -> -E
 righttrigger -> -U
 
-// lever clicks
+// stick clicks
 ls -> S-
 rs -> -S
 
@@ -78,8 +78,8 @@ left(u,ul,l,dl) -> 1L-
 right(u,ur) -> -1r
 right(u,ur,r) -> -1R
 right(u,ur,r,dr) -> -1R
-right(u,ul) -> 1l-
-right(u,ul,l) -> 1L-
+right(u,ul) -> -1l
+right(u,ul,l) -> -1L
 right(u,ul,l,dl) -> -1L
 
 left(ur,r) -> 2r-
@@ -91,8 +91,8 @@ left(ur,u,ul,l) -> 2L-
 right(ur,r) -> -2r
 right(ur,r,dr) -> -2R
 right(ur,r,dr,d) -> -2R
-right(ur,u) -> 2l-
-right(ur,u,ul) -> 2L-
+right(ur,u) -> -2l
+right(ur,u,ul) -> -2L
 right(ur,u,ul,l) -> -2L
 
 left(r,dr) -> 3r-
@@ -104,8 +104,8 @@ left(r,ur,u,ul) -> 3L-
 right(r,dr) -> -3r
 right(r,dr,d) -> -3R
 right(r,dr,d,dl) -> -3R
-right(r,ur) -> 3l-
-right(r,ur,u) -> 3L-
+right(r,ur) -> -3l
+right(r,ur,u) -> -3L
 right(r,ur,u,ul) -> -3L
 
 left(dr,d) -> 4r-
@@ -117,8 +117,8 @@ left(dr,r,ur,u) -> 4L-
 right(dr,d) -> -4r
 right(dr,d,dl) -> -4R
 right(dr,d,dl,l) -> -4R
-right(dr,r) -> 4l-
-right(dr,r,ur) -> 4L-
+right(dr,r) -> -4l
+right(dr,r,ur) -> -4L
 right(dr,r,ur,u) -> -4L
 
 left(d,dl) -> 5r-
@@ -130,8 +130,8 @@ left(d,dr,r,ur) -> 5L-
 right(d,dl) -> -5r
 right(d,dl,l) -> -5R
 right(d,dl,l,ul) -> -5R
-right(d,dr) -> 5l-
-right(d,dr,r) -> 5L-
+right(d,dr) -> -5l
+right(d,dr,r) -> -5L
 right(d,dr,r,ur) -> -5L
 
 left(dl,l) -> 6r-
@@ -143,8 +143,8 @@ left(dl,d,dr,r) -> 6L-
 right(dl,l) -> -6r
 right(dl,l,ul) -> -6R
 right(dl,l,ul,u) -> -6R
-right(dl,d) -> 6l-
-right(dl,d,dr) -> 6L-
+right(dl,d) -> -6l
+right(dl,d,dr) -> -6L
 right(dl,d,dr,r) -> -6L
 
 left(l,ul) -> 7r-
@@ -156,8 +156,8 @@ left(l,dl,d,dr) -> 7L-
 right(l,ul) -> -7r
 right(l,ul,u) -> -7R
 right(l,ul,u,ur) -> -7R
-right(l,dl) -> 7l-
-right(l,dl,d) -> 7L-
+right(l,dl) -> -7l
+right(l,dl,d) -> -7L
 right(l,dl,d,dr) -> -7L
 
 left(ul,u) -> 8r-
@@ -169,6 +169,6 @@ left(ul,l,dl,d) -> 8L-
 right(ul,u) -> -8r
 right(ul,u,ur) -> -8R
 right(ul,u,ur,r) -> -8R
-right(ul,l) -> 8l-
-right(ul,l,dl) -> 8L-
+right(ul,l) -> -8l
+right(ul,l,dl) -> -8L
 right(ul,l,dl,d) -> -8L
